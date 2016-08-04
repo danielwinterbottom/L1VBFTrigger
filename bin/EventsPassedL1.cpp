@@ -96,15 +96,16 @@ bool processArgs(int argc, char* argv[], ProgramOptions &opt){
       }
     }else if(arg == "--outputFilename"){
       if(i+1<argc){i++; opt.outputFilename = argv[i];}
-    }else if(arg == "--decay"){
+    }else if(arg == "--decayType"){
         if(i+1<argc){i++; 
-          if     (std::string(argv[i]) == "EleEle"){options.decayType = 1}
-          else if(std::string(argv[i]) == "EleMuo"){options.decayType = 2}
-          else if(std::string(argv[i]) == "EleHad"){options.decayType = 3}
-          else if(std::string(argv[i]) == "MuoMuo"){options.decayType = 4}
-          else if(std::string(argv[i]) == "MuoHad"){options.decayType = 5}
-          else if(std::string(argv[i]) == "HadHad"){options.decayType = 6}        
+          if     (std::string(argv[i]) == "EleEle"){opt.decayType = 1;}
+          else if(std::string(argv[i]) == "EleMuo"){opt.decayType = 2;}
+          else if(std::string(argv[i]) == "EleHad"){opt.decayType = 3;}
+          else if(std::string(argv[i]) == "MuoMuo"){opt.decayType = 4;}
+          else if(std::string(argv[i]) == "MuoHad"){opt.decayType = 5;}
+          else if(std::string(argv[i]) == "HadHad"){opt.decayType = 6;}        
         }
+    }
   }
   
   return 1;
@@ -125,6 +126,7 @@ int main(int argc, char* argv[]){
   std::cout << "cutsInput      = " << options.cutsInput      << std::endl;
   std::cout << "cutsInputLine  = " << options.cutsInputLine  << std::endl;
   std::cout << "outputFilename = " << options.outputFilename << std::endl;
+  std::cout << "decayType      = " << options.decayType      << std::endl;
   
   bool SpecifiedRun = false;
   
@@ -139,18 +141,53 @@ int main(int argc, char* argv[]){
   TFile *fOut = new TFile(options.outputFilename.c_str(),"RECREATE");
   
   std::vector<TH1D*> myHists;
+  std::vector<TH1D*> leadJetVary;
+  std::vector<TH1D*> subleadJetVary;
+  std::vector<TH1D*> MjjVary;
+  std::vector<TH1D*> MjjMinVary;
+  std::vector<TH1D*> MjjMaxVary;
   
   if(options.isData){
     for(unsigned i=0; i<options.runs.size(); ++i){
       std::string histName = Form("h_eventspassed_%u",options.runs[i]);
       TH1D *hist = new TH1D(histName.c_str(),histName.c_str(),3,0,3);
       myHists.push_back(hist);
+      
+      //std::string histName1 = Form("h_leadJetVary_%u",options.runs[i]);
+      //std::string histName2 = Form("h_subleadJetVary_%u",options.runs[i]);
+      //std::string histName3 = Form("h_MjjVary_%u",options.runs[i]);
+      //std::string histName4 = Form("h_MjjMinVary_%u",options.runs[i]);
+      //std::string histName5 = Form("h_MjjMaxVary_%u",options.runs[i]);
+      //
+      //TH1D *hist1 = new TH1D(histName1.c_str(),histName1.c_str(),200,0,200);
+      //TH1D *hist2 = new TH1D(histName2.c_str(),histName2.c_str(),200,0,200);
+      //TH1D *hist3 = new TH1D(histName3.c_str(),histName3.c_str(),700,0,700);
+      //TH1D *hist4 = new TH1D(histName4.c_str(),histName4.c_str(),200,0,200);
+      //TH1D *hist5 = new TH1D(histName5.c_str(),histName5.c_str(),200,0,200);
+      
+      //leadJetVary.push_back(hist1);
+      //subleadJetVary.push_back(hist2);
+      //MjjVary.push_back(hist3);
+      //MjjMinVary.push_back(hist4);
+      //MjjMaxVary.push_back(hist5);
+
     }
   }
   else{
-    TH1D *hist;
-    hist->SetName("h_eventspassed");
+    TH1D *hist = new TH1D("h_eventspassed","h_eventspassed",3,0,3);
     myHists.push_back(hist);
+    
+    //TH1D *hist1 = new TH1D(h_leadJetVary,h_leadJetVary,200,0,200);
+    //TH1D *hist2 = new TH1D(h_subleadJetVary,h_subleadJetVary,200,0,200);
+    //TH1D *hist3 = new TH1D(h_MjjVary,h_MjjVary,700,0,700);
+    //TH1D *hist4 = new TH1D(h_MjjMinVary,h_MjjMinVary,200,0,200);
+    //TH1D *hist5 = new TH1D(h_MjjMaxVary,h_MjjMaxVary,200,0,200);
+    
+    //leadJetVary.push_back(hist1);
+    //subleadJetVary.push_back(hist2);
+    //MjjVary.push_back(hist3);
+    //MjjMinVary.push_back(hist4);
+    //MjjMaxVary.push_back(hist5);
   }
   
   TString filename1;
@@ -158,13 +195,14 @@ int main(int argc, char* argv[]){
   TChain *chIn2;
   if(options.useEmu) chIn2 = new TChain("l1UpgradeEmuTree/L1UpgradeTree");
   else chIn2 = new TChain("l1UpgradeTree/L1UpgradeTree");
-  TChain *chIn3 new TChain("icEventProducer/EventTree");
+  TChain *chIn3 = new TChain("icEventProducer/EventTree");
   
   std::ifstream infile1;
   infile1.open(options.input);
   while (infile1 >> filename1){
     chIn1->Add(filename1);
     chIn2->Add(filename1);
+    chIn3->Add(filename1);
   }
   infile1.close();
   
@@ -177,8 +215,8 @@ int main(int argc, char* argv[]){
   productL1Upgrade= new L1Analysis::L1AnalysisL1UpgradeDataFormat();
   chIn2->SetBranchAddress("L1Upgrade",&productL1Upgrade);
   
-  unsigned decay;
-  chIn3->SetBranchAddress("higgsTauTauDecayMode",&decay);
+  unsigned decayValue = 0;
+  chIn3->SetBranchAddress("higgsTauTauDecayMode",&decayValue);
   
   double EGPtCut; double MuPtCut; double Tau1PtCut; double Tau2PtCut; double Jet1PtCut; double Jet2PtCut; double Jet3PtCut; bool EGIso; bool MuIso; bool TauIso; double EGEta; double MuEta; double TauEta; double MjjPtMin1; double MjjPtMin2; double MjjCut;
   std::ifstream infile2;
@@ -242,8 +280,9 @@ int main(int argc, char* argv[]){
     
     chIn1->GetEntry(event);
     chIn2->GetEntry(event);
+    chIn3->GetEntry(event);
     totaleventcount++;
-    
+
     unsigned histIndex = 0;
     
     if(SpecifiedRun && options.isData){
@@ -260,8 +299,8 @@ int main(int argc, char* argv[]){
       }
     }
     
-    if(!isData && options.decayType !=0){
-      if(options.decayType != decay){
+    if(!options.isData && options.decayType !=0){
+      if(options.decayType != decayValue){
         continue;
       }
     }
@@ -576,6 +615,7 @@ int main(int argc, char* argv[]){
     for(unsigned obj=0; obj<l1taus.size();         obj++){delete l1taus[obj];}
     for(unsigned obj=0; obj<l1jets.size();         obj++){delete l1jets[obj];}
     for(unsigned obj=0; obj<l1sums.size();         obj++){delete l1sums[obj];}
+
   }
   
   std::cout << "events processed " << totaleventcount << std::endl;
