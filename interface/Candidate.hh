@@ -1,5 +1,5 @@
-#ifndef TriggerStudies_L1VBFTrigger_Candidate_hh
-#define TriggerStudies_L1VBFTrigger_Candidate_hh
+#ifndef ICHiggsTauTau_Candidate_hh
+#define ICHiggsTauTau_Candidate_hh
 #include <vector>
 #include "Math/Vector4D.h"
 #include "Math/Vector4Dfwd.h"

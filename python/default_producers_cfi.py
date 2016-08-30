@@ -7,3 +7,5 @@ tauDecayInfoProducer = cms.EDProducer('TauDecayInfoProducer')
 ## [Event]
 icEventProducer = cms.EDProducer('ICEventProducer')
 ## [Event]
+
+import FWCore.ParameterSet.Config as cms

@@ -4,3 +4,4 @@
 <use name="boost"/>
 <use name="TriggerStudies/L1VBFTrigger"/>
 <bin name="EventsPassedL1" file="EventsPassedL1.cpp"/>
+<bin name="ScanXML" file="ScanXML.cpp"/>

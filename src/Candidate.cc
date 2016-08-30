@@ -1,4 +1,4 @@
-#include "TriggerStudies/L1VBFTrigger/interface/Candidate.hh"
+#include "../interface/Candidate.hh"
 
 namespace ic {
 // Constructors/Destructors
