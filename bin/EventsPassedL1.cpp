@@ -170,8 +170,12 @@ int main(int argc, char* argv[]){
   std::vector<TH1D*> muVary;
   TH1D *lumibinned_num = new TH1D("lumibinned_num","lumibinned_num",20,0,2);
   TH1D *lumibinned_denum = new TH1D("lumibinned_denum","lumibinned_denum",20,0,2);
+  TH1D *gains = new TH1D("gains","gains",12,0,12);
   lumibinned_num->Sumw2();
-  lumibinned_denum->Sumw2();
+  //lumibinned_denum->Sumw2();
+  
+  TH1D *lumibinned_num_pure = new TH1D("lumibinned_num_pure","lumibinned_num_pure",20,0,2);
+  lumibinned_num_pure->Sumw2();
   
   TH2D *hist1_2D = new TH2D("leadJetVary",    "leadJetVary"   ,20,0,2,201,-1,200);
   TH2D *hist2_2D = new TH2D("hsubleadJetVary","subleadJetVary",20,0,2,201,-1,200);
@@ -179,6 +183,13 @@ int main(int argc, char* argv[]){
   TH2D *hist4_2D = new TH2D("hMjjMinVary",    "MjjMinVary"    ,20,0,2,201,-1,200);
   TH2D *hist5_2D = new TH2D("hMjjMaxVary",    "MjjMaxVary"    ,20,0,2,201,-1,200);
   TH2D *hist6_2D = new TH2D("hMuVary",        "MuVar"         ,20,0,2,31,-1,30);
+  
+  hist1_2D->Sumw2();
+  hist2_2D->Sumw2();
+  hist3_2D->Sumw2();
+  hist4_2D->Sumw2();
+  hist5_2D->Sumw2();
+  hist6_2D->Sumw2();
   
   if(options.isData && SpecifiedRun){
     for(unsigned i=0; i<options.runs.size(); ++i){
@@ -287,11 +298,11 @@ int main(int argc, char* argv[]){
   unsigned decayValue = 0;
   if(!options.isData) chIn3->SetBranchAddress("higgsTauTauDecayMode",&decayValue);
   
-  double EGPtCut; double MuPtCut; double Tau1PtCut; double Tau2PtCut; double Jet1PtCut; double Jet2PtCut; double Jet3PtCut; bool EGIso; bool MuIso; bool TauIso; double EGEta; double MuEta; double TauEta; double MjjPtMin1; double MjjPtMin2; double MjjCut;
+  double EGPtCut; double MuPtCut; double Tau1PtCut; double Tau2PtCut; double Jet1PtCut; double Jet2PtCut; double Jet3PtCut; bool EGIso; bool MuIso; bool TauIso; double EGEta; double MuEta; double TauEta; double Jet1Eta; double MjjPtMin1; double MjjPtMin2; double MjjCut;
   std::ifstream infile2;
   infile2.open (options.cutsInput);
   unsigned linecount = 1;
-  while(infile2 >> EGPtCut >> MuPtCut >> Tau1PtCut >> Tau2PtCut >> Jet1PtCut >> Jet2PtCut >> Jet3PtCut >> EGIso >> MuIso >> TauIso >> EGEta >> MuEta >> TauEta >> MjjPtMin1 >> MjjPtMin2 >> MjjCut){
+  while(infile2 >> EGPtCut >> MuPtCut >> Tau1PtCut >> Tau2PtCut >> Jet1PtCut >> Jet2PtCut >> Jet3PtCut >> EGIso >> MuIso >> TauIso >> EGEta >> MuEta >> TauEta >> Jet1Eta >> MjjPtMin1 >> MjjPtMin2 >> MjjCut){
     if(linecount == options.cutsInputLine){ 
       break;
     } else{
@@ -496,33 +507,36 @@ int main(int argc, char* argv[]){
     std::vector<ic::L1TJet*> l1jets_filtered(l1jets);
     std::vector<ic::L1TEGamma*> l1electrons_filtered(l1electrons);
     std::vector<ic::L1TMuon*> l1muons_filtered(l1muons);
+    std::vector<ic::L1TJet*> l1jets_etafiltered(l1jets);
     
     
-    
-    for(int i= n_l1muons_-1; i>=0; i--){
-        if(l1muons[i]->quality < 12) l1muons_filtered.erase(l1muons_filtered.begin()+i);
+    for(int i= l1muons_filtered.size()-1; i>=0; i--){
+        if(l1muons_filtered[i]->quality < 12) l1muons_filtered.erase(l1muons_filtered.begin()+i);
     }
     
     if(TauIso){
-        for(int i= n_l1taus_-1; i>=0; i--) if(l1taus[i]->isolation == 0) l1taus_filtered.erase(l1taus_filtered.begin()+i);
+        for(int i= l1taus_filtered.size()-1; i>=0; i--) if(l1taus_filtered[i]->isolation == 0) l1taus_filtered.erase(l1taus_filtered.begin()+i);
     }
     
     if(EGIso){
-        for(int i= n_l1electrons_-1; i>=0; i--) if(l1electrons[i]->isolation == 0) l1electrons_filtered.erase(l1electrons_filtered.begin()+i);
+        for(int i= l1electrons_filtered.size()-1; i>=0; i--) if(l1electrons_filtered[i]->isolation == 0) l1electrons_filtered.erase(l1electrons_filtered.begin()+i);
     }
     if(MuIso){
-        for(int i= n_l1muons_-1; i>=0; i--) if(l1muons[i]->isolation == 0) l1muons_filtered.erase(l1muons_filtered.begin()+i);
+        for(int i= l1muons_filtered.size()-1; i>=0; i--) if(l1muons_filtered[i]->isolation == 0) l1muons_filtered.erase(l1muons_filtered.begin()+i);
     }
     
     if(TauEta > 0){
-        for(int i= n_l1taus_-1; i>=0; i--) if(std::fabs(l1taus[i]->vector().Rapidity()) > TauEta) l1taus_filtered.erase(l1taus_filtered.begin()+i);
+        for(int i= l1taus_filtered.size()-1; i>=0; i--) if(std::fabs(l1taus_filtered[i]->vector().Rapidity()) > TauEta) l1taus_filtered.erase(l1taus_filtered.begin()+i);
     }
     
     if(EGEta > 0){
-        for(int i= n_l1electrons_-1; i>=0; i--) if(std::fabs(l1electrons[i]->vector().Rapidity()) > EGEta) l1electrons_filtered.erase(l1electrons_filtered.begin()+i);
+        for(int i= l1electrons_filtered.size()-1; i>=0; i--) if(std::fabs(l1electrons_filtered[i]->vector().Rapidity()) > EGEta) l1electrons_filtered.erase(l1electrons_filtered.begin()+i);
     }
     if(MuEta > 0){
-        for(int i= n_l1muons_-1; i>=0; i--) if(std::fabs(l1muons[i]->vector().Rapidity()) > MuEta) l1muons_filtered.erase(l1muons_filtered.begin()+i);
+        for(int i= l1muons_filtered.size()-1; i>=0; i--) if(std::fabs(l1muons_filtered[i]->vector().Rapidity()) > MuEta) l1muons_filtered.erase(l1muons_filtered.begin()+i);
+    }
+    if(Jet1Eta > 0){
+      for(int i= l1jets_etafiltered.size()-1; i>=0; i--) if(std::fabs(l1jets_etafiltered[i]->vector().Rapidity()) > Jet1Eta) l1jets_etafiltered.erase(l1jets_etafiltered.begin()+i);
     }
     
     n_l1electrons_ = l1electrons_filtered.size();
@@ -538,7 +552,11 @@ int main(int argc, char* argv[]){
     }
     if(MuPtCut > 0){
       if(n_l1muons_ < 1){ Filter = true;}
-      else if (l1muons_filtered[0]->vector().Pt() < MuPtCut){ Filter = true;}    
+      else if (l1muons_filtered[0]->vector().Pt() < MuPtCut){
+          //std::cout << l1muons_filtered[0]->vector().Pt() << std::endl;
+          //std::cout << l1muons_filtered[0]->quality << std::endl;
+          //std::cout << l1muons_filtered[0]->vector().Rapidity() << std::endl;
+          Filter = true;}    
     }
     if(Tau1PtCut > 0){
       if(n_l1taus_ < 1){ Filter = true;}
@@ -549,12 +567,20 @@ int main(int argc, char* argv[]){
       else if (l1taus_filtered[1]->vector().Pt() < Tau2PtCut){ Filter = true;}    
     }
     if(Jet1PtCut > 0){
-      if(n_l1jets_ < 1){ Filter = true;}
-      else if (l1jets_filtered[0]->vector().Pt() < Jet1PtCut){ Filter = true;}    
+      if(l1jets_filtered.size() < 1){ Filter = true;}
+      else if (l1jets_etafiltered[0]->vector().Pt() < Jet1PtCut){ Filter = true;}
     }
     if(Jet2PtCut > 0){
       if(n_l1jets_ < 2){ Filter = true;}
-      else if (l1jets_filtered[1]->vector().Pt() < Jet2PtCut){ Filter = true;}    
+      else if (l1jets_filtered[1]->vector().Pt() < Jet2PtCut){ Filter = true;}
+      if(Jet1Eta>0){
+        Filter=true;
+        for(unsigned i=0; i<l1jets_filtered.size(); ++i){
+          for(unsigned j=i+1; j<l1jets_filtered.size(); ++j){
+             if((l1jets_filtered[i]->vector().Pt() > Jet1PtCut && std::fabs(l1jets_filtered[i]->vector().Rapidity()) >= Jet1Eta && l1jets_filtered[j]->vector().Pt() > Jet2PtCut && std::fabs(l1jets_filtered[j]->vector().Rapidity()) < Jet1Eta) || (l1jets_filtered[i]->vector().Pt() > Jet1PtCut && std::fabs(l1jets_filtered[i]->vector().Rapidity()) < Jet1Eta && l1jets_filtered[j]->vector().Pt() > Jet2PtCut && std::fabs(l1jets_filtered[j]->vector().Rapidity()) >= Jet1Eta) || (l1jets_filtered[i]->vector().Pt() > Jet1PtCut && std::fabs(l1jets_filtered[i]->vector().Rapidity()) < Jet1Eta && l1jets_filtered[j]->vector().Pt() > Jet2PtCut && std::fabs(l1jets_filtered[j]->vector().Rapidity()) < Jet1Eta)) Filter = false;   
+          }
+        }    
+      }
     }
     if(Jet3PtCut > 0){
       if(n_l1jets_ < 3){ Filter = true;}
@@ -577,9 +603,105 @@ int main(int argc, char* argv[]){
           }
         }
       }
-      if(LargestMjj < MjjCut){ Filter = true;}  
+      if(LargestMjj < MjjCut){ Filter = true;} 
+      
+      bool PassedDoubleIsoTau36er = false;
+      bool PassedSingleEG = false;
+      bool PassedSingleMu = false;
+      bool PassedMET90 = false;
+      
+      unsigned taucount = 0;
+      for(unsigned i = 0; i< l1taus.size(); i++){
+        if(std::fabs(l1taus[i]->vector().Rapidity())<=2.1 && l1taus[i]->vector().Pt() >= 36 && l1taus[i]->isolation !=0){
+          taucount++;
+        }
+      }
+      if(taucount >=2) {
+        PassedDoubleIsoTau36er = true;  
+      }
+      
+      bool PassedEG36 = false;
+      bool PassedIsoEG34 = false;
+      bool PassedIsoEG32er = false;
+      bool PassedTripleJet_92_76_64 = false;
+      
+      for(unsigned i = 0; i<l1electrons.size(); i++){
+        if(l1electrons[i]->vector().Pt() >= 36 ) PassedEG36 = true;
+        if(l1electrons[i]->vector().Pt() >= 32 && l1electrons[i]->isolation != 0 ) PassedIsoEG34 = true;
+        if(l1electrons[i]->vector().Pt() >= 32 && l1electrons[i]->isolation != 0 && std::fabs(l1electrons[i]->vector().Rapidity()) <= 2.1) PassedIsoEG32er = true;
+      }
+      if(PassedIsoEG32er || PassedIsoEG34 || PassedEG36) PassedSingleEG = true;
+      
+      bool PassedSingleMu22 = false;
+      bool PassedSingleMu20er = false;
+      for(unsigned i = 0; i<l1muons.size(); i++){
+        if(l1muons[i]->vector().Pt() >= 22 && l1muons[i]->quality>=12) PassedSingleMu22 = true;
+        if(l1muons[i]->vector().Pt() >= 20 && l1muons[i]->quality>=12 && std::fabs(l1muons[i]->vector().Rapidity()) <= 2.1) PassedSingleMu20er = true;
+      }
+      
+      if(PassedSingleMu20er || PassedSingleMu22) PassedSingleMu = true;
+      
+      for(unsigned i=0; i<l1sums.size(); ++i){
+        double MET = 0;  
+        if(l1sums[i]->sumType==2) MET = l1sums[i]->vector().Pt();
+        if(MET >= 90) PassedMET90 = true;
+      }
+      
+      std::vector<ic::L1TJet> centraljets;
+      std::vector<ic::L1TJet> forwardsjets;
+      for(unsigned i = 0; i<l1jets.size(); i++){
+        if(std::fabs(l1jets[i]->vector().Rapidity()) <= 3.) centraljets.push_back(*l1jets[i]);
+        else forwardsjets.push_back(*l1jets[i]);
+      }
+      if(centraljets.size() >=3){
+        if(centraljets[0].vector().Pt() >= 92 && centraljets[1].vector().Pt() > 76 && centraljets[2].vector().Pt() >= 64) PassedTripleJet_92_76_64 = true;
+      }
+      if(centraljets.size() >=2 && forwardsjets.size() >=1){
+        if     (centraljets[0].vector().Pt() >= 92 && centraljets[1].vector().Pt() >= 76 && forwardsjets[0].vector().Pt() >= 64) PassedTripleJet_92_76_64 = true;
+        else if(centraljets[0].vector().Pt() >= 92 && centraljets[1].vector().Pt() >= 64 && forwardsjets[0].vector().Pt() >= 76) PassedTripleJet_92_76_64 = true;
+        else if(centraljets[0].vector().Pt() >= 76 && centraljets[1].vector().Pt() >= 64 && forwardsjets[0].vector().Pt() >= 88) PassedTripleJet_92_76_64 = true;
+      }
+      
+      gains->Fill(0);
+      if(!Filter) gains->Fill(1);
+      if(PassedDoubleIsoTau36er){
+        gains->Fill(2);
+      } else if(!Filter) gains->Fill(3);
+      if(PassedSingleEG){
+        gains->Fill(4); 
+      } else if(!Filter) gains->Fill(5);
+      if(PassedSingleMu){
+        gains->Fill(6);
+      } else if(!Filter) gains->Fill(7);
+      if(PassedMET90){
+        gains->Fill(8);
+      } else if(!Filter) gains->Fill(9);
+      if(PassedTripleJet_92_76_64){
+        gains->Fill(10);
+      } else if(!Filter) gains->Fill(11);
     }
-    
+
+    /*
+    bool FailedOR = true;
+    for(unsigned i=0; i<l1muons_filtered.size(); ++i){
+      if(l1muons_filtered[0]->vector().Pt()>=5) FailedOR = false;
+    }
+    for(unsigned i=0; i<l1electrons_filtered.size(); ++i){
+      if(l1electrons_filtered[0]->vector().Pt()>=10) FailedOR = false;
+    }
+    for(unsigned i=0; i<l1taus_filtered.size(); ++i){
+      if(l1taus_filtered[0]->vector().Pt()>=30) FailedOR = false;
+    }
+    if(n_l1jets_>3){
+      if(l1jets[0]->vector().Pt()>=Jet1PtCut && l1jets[1]->vector().Pt() >=60 && l1jets[2]->vector().Pt()>=Jet2PtCut) FailedOR = false;    
+    }
+    for(unsigned i=0; i<l1sums.size(); ++i){
+        double MET = 0;  
+        if(l1sums[i]->sumType==2) MET = l1sums[i]->vector().Pt();
+        if(MET >= 50) FailedOR = false;
+      }
+    if(FailedOR) Filter = true;
+    */
     if(options.doBinnedRates){
       unsigned run = productL1Event->run;
       unsigned lumiSection = productL1Event->lumi;
@@ -636,24 +758,31 @@ int main(int argc, char* argv[]){
       
       //Check if event fired any other trigger to estimate pure rate
      
-      //SingleJet170
-      bool PassedSingleJet170 = false;
+      //SingleJet180
+      //std::cout << "SingleJet" << std::endl;
+      bool PassedSingleJet180 = false;
       if(l1jets.size()>= 1){ 
-        if(l1jets[0]->vector().Pt() >= 170) {
-          PassedSingleJet170 = true;  
+        if(l1jets[0]->vector().Pt() >= 180) {
+          PassedSingleJet180 = true;
+        //  std::cout<< l1jets[0]->vector().Pt() << std::endl;;
         }
       }
-      //DoubleJetC100
-      bool PassedDoubleJet100 = false;
+      //DoubleJetC112
+      //std::cout << "DoubleJet" << std::endl;
+      bool PassedDoubleJet112 = false;
       unsigned Cjetcount1=0;
       for(unsigned i = 0; i<l1jets.size(); i++){
-        if(std::fabs(l1jets[i]->vector().Rapidity())<=3 && l1jets[i]->vector().Pt() >= 100) Cjetcount1++;    
+        if(std::fabs(l1jets[i]->vector().Rapidity())<=3 && l1jets[i]->vector().Pt() >= 112){
+          Cjetcount1++;
+         //std::cout << l1jets[i]->vector().Rapidity() << std::endl;
+         //std::cout << l1jets[i]->vector().Pt() << std::endl;
+        }
       }
       if(Cjetcount1 >= 2) {
-        PassedDoubleJet100 = true;
+        PassedDoubleJet112 = true;
       }
      
-      //QuadJetC40
+      //QuadJetC50
       bool PassedQuadJetC50 = false;
       unsigned Cjetcount=0;
       for(unsigned i = 0; i<l1jets.size(); i++){
@@ -663,15 +792,27 @@ int main(int argc, char* argv[]){
         PassedQuadJetC50 = true;
       }
       
-      //DoubleIsoTau28er
-      bool PassedDoubleIsoTau28er = false;
+      //DoubleIsoTau36er
+      bool PassedDoubleIsoTau36er = false;
+      bool PassedSingleTau120er = false;
+      bool PassedDoubleTau50er = false;
       unsigned taucount=0;
+      unsigned taucount2=0;
+      //std::cout << "DoubleIsoTau" << std::endl;
       for(unsigned i = 0; i< l1taus.size(); i++){
-        if(std::fabs(l1taus[i]->vector().Rapidity())<=2.1 && l1taus[i]->vector().Pt() >= 28 && l1taus[i]->isolation !=0) taucount++;    
+        if(std::fabs(l1taus[i]->vector().Rapidity())<=2.1 && l1taus[i]->vector().Pt() >= 36 && l1taus[i]->isolation !=0){
+          taucount++;
+         // std::cout << l1taus[i]->vector().Rapidity() << std::endl;
+         // std::cout << l1taus[i]->isolation << std::endl;
+         // std::cout << l1taus[i]->vector().Pt() << std::endl;
+        }
+        if(std::fabs(l1taus[i]->vector().Rapidity())<=2.1 && l1taus[i]->vector().Pt() >= 50) taucount2++;
+        if(std::fabs(l1taus[i]->vector().Rapidity())<=2.1 && l1taus[i]->vector().Pt() >= 120) PassedSingleTau120er = true;
       }
       if(taucount >=2) {
-        PassedDoubleIsoTau28er = true;  
+        PassedDoubleIsoTau36er = true;  
       }
+      if(taucount2 >=2) PassedDoubleTau50er = true;
      
       //HTT300
       
@@ -686,8 +827,8 @@ int main(int argc, char* argv[]){
         PassedHTT300 = true; 
       }
      
-      //TripleJet_84_68_48
-      bool PassedTripleJet_88_72_56 = false;
+      //TripleJet_92_76_64
+      bool PassedTripleJet_92_76_64 = false;
       std::vector<ic::L1TJet> centraljets;
       std::vector<ic::L1TJet> forwardsjets;
       for(unsigned i = 0; i<l1jets.size(); i++){
@@ -695,22 +836,46 @@ int main(int argc, char* argv[]){
         else forwardsjets.push_back(*l1jets[i]);
       }
       if(centraljets.size() >=3){
-        if(centraljets[0].vector().Pt() >= 88 && centraljets[1].vector().Pt() > 72 && centraljets[2].vector().Pt() >= 56) PassedTripleJet_88_72_56 = true;
+        if(centraljets[0].vector().Pt() >= 92 && centraljets[1].vector().Pt() > 76 && centraljets[2].vector().Pt() >= 64) PassedTripleJet_92_76_64 = true;
       }
       if(centraljets.size() >=2 && forwardsjets.size() >=1){
-        if     (centraljets[0].vector().Pt() >= 88 && centraljets[1].vector().Pt() > 72 && forwardsjets[0].vector().Pt() >= 56) PassedTripleJet_88_72_56 = true;
-        else if(centraljets[0].vector().Pt() >= 88 && centraljets[1].vector().Pt() > 56 && forwardsjets[0].vector().Pt() >= 72) PassedTripleJet_88_72_56 = true;
-        else if(centraljets[0].vector().Pt() >= 72 && centraljets[1].vector().Pt() > 56 && forwardsjets[0].vector().Pt() >= 88) PassedTripleJet_88_72_56 = true;
+        if     (centraljets[0].vector().Pt() >= 92 && centraljets[1].vector().Pt() >= 76 && forwardsjets[0].vector().Pt() >= 64) PassedTripleJet_92_76_64 = true;
+        else if(centraljets[0].vector().Pt() >= 92 && centraljets[1].vector().Pt() >= 64 && forwardsjets[0].vector().Pt() >= 76) PassedTripleJet_92_76_64 = true;
+        else if(centraljets[0].vector().Pt() >= 76 && centraljets[1].vector().Pt() >= 64 && forwardsjets[0].vector().Pt() >= 88) PassedTripleJet_92_76_64 = true;
       }
+      
+      //std::cout << "Passed Triple Jet " << std::endl;
+      //if(PassedTripleJet_92_76_64){
+      //  std::cout << "Central Jets:" << std::endl;
+      //  std::cout << centraljets[0].vector().Pt() << "  " << centraljets[1].vector().Pt() << centraljets[2].vector().Pt() << std::endl;
+      //  std::cout << forwardsjets[0].vector().Pt() << "  " << forwardsjets[1].vector().Pt() << forwardsjets[2].vector().Pt() << std::endl;
+      //}
       
       //SingleMu22, SingleMu20er, Mu6_HTT200
       bool PassedSingleMu22 = false;
       bool PassedSingleMu20er = false;
-      bool Mu6;
+      bool Mu6 = false;
+      bool PassedDoubleMu_12_5 = false;
+      bool PassedDoubleMu0er_MaxdEta = false;
       for(unsigned i = 0; i<l1muons.size(); i++){
         if(l1muons[i]->vector().Pt() >= 22 && l1muons[i]->quality>=12) PassedSingleMu22 = true;
         if(l1muons[i]->vector().Pt() >= 20 && l1muons[i]->quality>=12 && std::fabs(l1muons[i]->vector().Rapidity()) <= 2.1) PassedSingleMu20er = true;
         if(l1muons[i]->vector().Pt() >= 6 && l1muons[i]->quality>=12) Mu6 = true;
+        if(l1muons[i]->vector().Pt() >= 12 && l1muons[i]->quality>=8){
+          for(unsigned j=i+1; j<l1muons.size(); j++){
+            if(l1muons[j]->vector().Pt() >= 5 && l1muons[i]->quality>=8) PassedDoubleMu_12_5 = true; 
+          }
+        }
+        
+        if(l1muons[i]->vector().Pt() >= 0 && l1muons[i]->quality>=8 && std::fabs(l1muons[i]->vector().Rapidity()) <= 1.4){
+          for(unsigned j=i+1; j<l1muons.size(); j++){
+            if(l1muons[j]->vector().Pt() >= 0 && l1muons[i]->quality>=8 && std::fabs(l1muons[i]->vector().Rapidity()) <= 1.4){
+              int charge = l1muons[i]->charge*l1muons[j]->charge;
+              double dEta = std::fabs(l1muons[i]->vector().Rapidity() - l1muons[j]->vector().Rapidity());
+              if (charge <0 && dEta<=1.8) PassedDoubleMu0er_MaxdEta = true;
+            }
+          }
+        }
       }
       
       //Mu6HTT200
@@ -719,35 +884,173 @@ int main(int argc, char* argv[]){
         PassedMu6HTT200 = true; 
       }
      
-      //SingleEG34, SingleIsoEG28, SingleIsoEG26er, 
+      //SingleEG36, SingleIsoEG36, SingleIsoEG32er, 
       
-      bool PassedEG34 = false;
-      bool PassedIsoEG28 = false;
-      bool PassedIsoEG26er = false;
+      bool PassedEG36 = false;
+      bool PassedIsoEG34 = false;
+      bool PassedIsoEG32er = false;
+      bool PassedDoubleEG_24_17 = false;
+      bool PassedDoubleEG_25_12 = false;
       
       for(unsigned i = 0; i<l1electrons.size(); i++){
-        if(l1electrons[i]->vector().Pt() >= 34 ) PassedEG34 = true;
-        if(l1electrons[i]->vector().Pt() >= 26 && l1electrons[i]->isolation != 0 ) PassedIsoEG28 = true;
-        if(l1electrons[i]->vector().Pt() >= 26 && l1electrons[i]->isolation != 0 && std::fabs(l1electrons[i]->vector().Rapidity()) <= 2.1) PassedIsoEG26er = true;
+        if(l1electrons[i]->vector().Pt() >= 36 ) PassedEG36 = true;
+        if(l1electrons[i]->vector().Pt() >= 32 && l1electrons[i]->isolation != 0 ) PassedIsoEG34 = true;
+        if(l1electrons[i]->vector().Pt() >= 32 && l1electrons[i]->isolation != 0 && std::fabs(l1electrons[i]->vector().Rapidity()) <= 2.1) PassedIsoEG32er = true;
+        if(l1electrons[i]->vector().Pt() >= 24 ){
+          for(unsigned j = i+1; j<l1electrons.size(); j++){
+            if(l1electrons[j]->vector().Pt() >= 17) PassedDoubleEG_24_17 = true; 
+          }
+        }
+        if(l1electrons[i]->vector().Pt() >= 25 ){
+          for(unsigned j = i+1; j<l1electrons.size(); j++){
+            if(l1electrons[j]->vector().Pt() >= 12) PassedDoubleEG_25_12 = true;    
+          }
+        }
       }
       
-      //MET80
-      bool PassedMET80 = false;
+      //MET90
+      bool PassedMET90 = false;
+      bool MET55 = false;
       for(unsigned i=0; i<l1sums.size(); ++i){
         double MET = 0;  
         if(l1sums[i]->sumType==2) MET = l1sums[i]->vector().Pt();
-        if(MET >= 80) PassedMET80 = true;
+        if(MET >= 90) PassedMET90 = true;
+        if(MET >= 55) MET55 = true;
       }
       
-      if(!(PassedSingleJet170 || PassedDoubleJet100 || PassedQuadJetC50 || PassedDoubleIsoTau28er || PassedHTT300 || PassedTripleJet_88_72_56 ||  PassedSingleMu22 || PassedSingleMu20er || PassedMu6HTT200 || PassedSingleMu22 || PassedSingleMu20er || PassedMu6HTT200 || PassedEG34 || PassedIsoEG26er || PassedIsoEG28 || PassedMET80)) myHists[histIndex]->Fill(2);
+      bool Mu20 = false;
+      bool IsoEG6 = false;
+      bool PassedEG22Tau26 = false;
+      bool PassedDoubleMuMET = false;
+      bool PassedMuTau = false;
+      bool PassedJetMu = false;
+      bool PassedEGMu = false;
+      unsigned mucount1 = 0;
+      for(unsigned i=0; i<l1muons.size(); ++i){
+        if(l1muons[i]->quality >=12 && l1muons[i]->vector().Pt() >= 20) Mu20 = true; 
+        if(l1muons[i]->quality >=8) mucount1++;
+        if(l1muons[i]->quality >=12 && l1muons[i]->vector().Pt() >= 18 && std::fabs(l1muons[i]->vector().Rapidity())<=2.1){
+          for(unsigned j=0; j< l1taus.size(); ++j){
+            if(std::fabs(l1taus[j]->vector().Rapidity())<=2.1 && l1taus[j]->vector().Pt() >=20) PassedMuTau = true;
+          }
+        }
+        if(l1muons[i]->quality >=12 && l1muons[i]->vector().Pt() >= 5 && std::fabs(l1muons[i]->vector().Rapidity())<=2.1){
+          for(unsigned j=0; j< l1electrons.size(); ++j){
+            if((std::fabs(l1electrons[j]->isolation)!=0 && l1electrons[j]->vector().Pt() >=20) || l1electrons[j]->vector().Pt() >=23) PassedEGMu = true;
+          }
+        }
+        if(l1muons[i]->quality >=12 && l1muons[i]->vector().Pt() >= 3){
+          for(unsigned j=0; j< l1jets.size(); ++j){
+            if(l1jets[j]->vector().Pt() >=120){
+                double dEta = std::fabs(l1jets[j]->vector().Rapidity() - l1muons[i]->vector().Rapidity());
+                double dPhi = std::fabs(l1jets[j]->vector().Phi() - l1muons[i]->vector().Phi());
+                if(dEta<=0.4 && dPhi<=0.4) PassedJetMu = true;
+            }
+          }
+        }
+      }
+      if(mucount1 >=2 && MET55) PassedDoubleMuMET = true;
+      for(unsigned i=0; i<l1electrons.size(); ++i){
+        if(l1electrons[i]->isolation !=0 && l1electrons[i]->vector().Pt() >=6) IsoEG6 = true;
+        if(l1electrons[i]->isolation !=0 && l1electrons[i]->vector().Pt() >=22 && std::fabs(l1electrons[i]->vector().Rapidity())<=2.1 ){
+          for(unsigned j=0; j< l1taus.size(); ++j){
+            if(l1taus[j]->isolation != 0 && std::fabs(l1taus[j]->vector().Rapidity())<=2.1 && l1taus[j]->vector().Pt() >=26){
+              double dEta = std::fabs(l1taus[j]->vector().Rapidity() - l1electrons[i]->vector().Rapidity());
+              if(dEta >= 0.2) PassedEG22Tau26 = true;   
+            }
+          }
+            
+        }
+      }
+      
+      bool PassedMu20IsoEG6 = Mu20 && IsoEG6;
+      bool PassedOthers = false;
+
+      if(PassedSingleJet180 || PassedDoubleJet112 || PassedQuadJetC50 || PassedDoubleIsoTau36er || PassedHTT300 || PassedTripleJet_92_76_64 ||  PassedSingleMu22 || PassedSingleMu20er || PassedMu6HTT200 || PassedSingleMu22 || PassedSingleMu20er || PassedMu6HTT200 || PassedEG36 || PassedIsoEG32er || PassedIsoEG34 || PassedMET90 || PassedDoubleEG_24_17 || PassedDoubleEG_25_12 || PassedSingleTau120er || PassedDoubleTau50er || PassedDoubleMu_12_5 || PassedDoubleMu0er_MaxdEta || PassedMu20IsoEG6 || PassedEG22Tau26 || PassedDoubleMuMET || PassedMuTau || PassedJetMu || PassedEGMu){
+        PassedOthers = true;
+      }
+      if (!PassedOthers) myHists[histIndex]->Fill(2);
+      
+      if(options.doBinnedRates){
+        unsigned run = productL1Event->run;
+        unsigned lumiSection = productL1Event->lumi;
+        double lumi = -1;
+        for(unsigned r=0; r<runInfos.size(); ++r){
+          if(runInfos[r].run == run){
+            for(unsigned l=0; l<runInfos[r].lumisections.size(); ++l){
+              if(runInfos[r].lumisections[l] == lumiSection){
+                lumi = runInfos[r].instlumis[l]/10000;
+                break;
+              }
+            }
+            break;
+          }
+        }
+        int NBunch = -1;
+        if(run >= 273158 && run <= 273411) NBunch = 589;
+        else if (run >= 277069 && run <= 277148) NBunch = 2064;
+        double w = NBunch*11.247;
+        if(NBunch != -1 && lumi != -1){
+          if(!PassedOthers){
+            lumibinned_num_pure->Fill(lumi,w);
+          }
+        }
+      }
+      
+      /*if(!Filter){
+        std::cout << "Iso Tau ";
+        for(unsigned i =0; i<l1taus.size(); ++i){
+          if(l1taus[i]->isolation !=0 && std::fabs(l1taus[i]->vector().Rapidity()) >=2.1){
+            std::cout << l1taus[i]->vector().Pt() << std::endl;
+            break;
+          }
+        }
+        std::cout << "Tau ";
+        for(unsigned i =0; i<l1taus.size(); ++i){
+          if(std::fabs(l1taus[i]->vector().Rapidity()) >=2.1){
+            std::cout << l1taus[i]->vector().Pt() << std::endl;
+            break;
+          }
+        }
+        std::cout << "Muon "; 
+        for(unsigned i =0; i<l1muons.size(); ++i){
+          if(l1muons[i]->quality>=12){
+            std::cout << l1muons[i]->vector().Pt() << std::endl;
+            break;
+          }
+        }
+        std::cout << "EG "; 
+        for(unsigned i =0; i<l1electrons.size(); ++i){
+            std::cout << l1electrons[i]->vector().Pt() << std::endl;
+            break;
+        }
+        std::cout << "Iso EG "; 
+        for(unsigned i =0; i<l1electrons.size(); ++i){
+          if(l1electrons[i]->isolation !=0){
+            std::cout << l1electrons[i]->vector().Pt() << std::endl;
+            break;
+          }
+        }
+      }*/
       
     }
+    
+
   
     for(unsigned obj=0; obj<l1electrons.size();    obj++){delete l1electrons[obj];}
     for(unsigned obj=0; obj<l1muons.size();        obj++){delete l1muons[obj];}
     for(unsigned obj=0; obj<l1taus.size();         obj++){delete l1taus[obj];}
     for(unsigned obj=0; obj<l1jets.size();         obj++){delete l1jets[obj];}
     for(unsigned obj=0; obj<l1sums.size();         obj++){delete l1sums[obj];}
+    l1electrons.clear();
+    l1muons.clear();
+    l1jets.clear();
+    l1taus.clear();
+    l1sums.clear();
+    l1electrons_filtered.clear();
+    l1muons_filtered.clear();
+    l1jets_filtered.clear();
+    l1taus_filtered.clear();
   
   }
   

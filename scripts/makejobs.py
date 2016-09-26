@@ -28,9 +28,6 @@ if options.outputFolder is not None:
   if not os.path.exists(outputFolder):
     os.makedirs(outputFolder)
 
-import ROOT
-chain = ROOT.TChain("l1EventTree/L1EventTree")
-
 num_lines = sum(1 for line in open(options.fileList))
 
 
@@ -51,7 +48,7 @@ for x in range(0,int(math.ceil(num_lines/float(options.splitting)))):
   
   fSubmit.write("qsub -q hep.q -l h_rt=0:30:0 " + options.outputFolder + "/runJob_"+str(x)+".sh\n")
   
-  fHadd.write(" " + options.outputFilename + str(x)+".root")
+  fHadd.write(" " + options.outputFilename+"_"+str(x)+".root")
   
   with open(outputFolder+'runJob_'+str(x)+'.sh','w') as fOut:
     fOut.write("#!/bin/bash\n")
@@ -59,13 +56,13 @@ for x in range(0,int(math.ceil(num_lines/float(options.splitting)))):
     fOut.write("cd /home/hep/dw515/NTupleProduction/l1t-integration-v62.0/CMSSW_8_0_9/src/TriggerStudies/L1VBFTrigger/\n");
     fOut.write("source /vols/grid/cms/setup.sh\n");
     fOut.write("eval `scramv1 runtime -sh`\n");
-    fOut.write("EventsPassedL1 --input "+options.fileList+" --outputFilename " + options.outputFilename + str(x)+".root "+" --minFile " + minFile + " --maxFile " + maxFile +" "+ options.options+"\n")
+    fOut.write("EventsPassedL1 --input "+options.fileList+" --outputFilename " + options.outputFilename+"_"+ str(x)+".root "+" --minFile " + minFile + " --maxFile " + maxFile +" "+ options.options+"\n")
 
   os.chmod(outputFolder+'/runJob_'+str(x)+'.sh', stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 fHadd.write("\n")
 for x in range(0,int(math.ceil(num_lines/float(options.splitting)))):
-  fHadd.write("rm " + options.outputFilename + str(x)+".root\n")
+  fHadd.write("rm " + options.outputFilename+"_"+str(x)+".root\n")
   
 os.chmod(outputFolder+'/submitJobs.sh', stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 os.chmod(outputFolder+'/haddJobs.sh', stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
