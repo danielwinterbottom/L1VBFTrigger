@@ -1,10 +1,10 @@
 int PlotRateVsLumi(unsigned k=1, unsigned l = 0, unsigned opt = 0){
     
 std::string outputname;
-if(k == 1) outputname = "DoubleJet_90_30_Mj30j30_580";
-else if(k == 2) outputname = "DoubleJet_90_50_Mj30j30_580";
-else if(k == 3) outputname = "DoubleJet_90_30_Mj30j30_620";
-else if(k == 4) outputname = "DoubleJet_94_30_Mj30j30_620";
+if(k == 1) outputname = "DoubleJet_90_30_Mj30j30_620";
+else if(k == 2) outputname = "DoubleJet_100_30_Mj30j30_620";
+else if(k == 3) outputname = "DoubleJet30_Mj30j30_400_Mu6";
+else if(k == 4) outputname = "DoubleJet30_Mj30j30_400_Mu10";
 else if(k == 5) outputname = "DoubleJet_97_30_Mj30j30_620";
 else if(k == 6) outputname = "DoubleJet_97_30_Mj30j30_630";
 else if(k == 7) outputname = "DoubleJet30_Mj30j30_360_Mu6";
@@ -33,7 +33,7 @@ else if(k == 34) outputname = "DoubleJet30_Mj30j30_440_Mu9";
 else outputname = "output";
 
 TCanvas c1;
-std::string filename = Form("output/DoubleJet%u.root",k);
+std::string filename = Form("output/PureRate%u.root",k);
 std::string num_name = "lumibinned_num";
 std::string denum_name = "lumibinned_denum";
 if(opt == 1){
@@ -87,6 +87,8 @@ tex3->SetTextFont(44);
 tex3->SetTextSize(23);   
 tex3->SetLineWidth(2);   
 tex3->Draw();
+
+if(opt == 1) outputname+="_pure";
 
 c1.Print(("RateVsLumiPlots/"+outputname+".png").c_str());
 c1.Print(("RateVsLumiPlots/"+outputname+".pdf").c_str());

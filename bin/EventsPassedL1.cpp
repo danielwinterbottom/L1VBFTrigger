@@ -173,6 +173,13 @@ int main(int argc, char* argv[]){
   TH1D *gains = new TH1D("gains","gains",12,0,12);
   lumibinned_num->Sumw2();
   //lumibinned_denum->Sumw2();
+  TH2D *MjjVsDeltaEta = new TH2D("MjjVsDeltaEta","MjjVsDeltaEta",20,0,10,50,0,1000);
+  MjjVsDeltaEta->GetXaxis()->SetTitle("|#Delta#eta|");
+  MjjVsDeltaEta->GetYaxis()->SetTitle("M_{jj} [GeV]");
+  
+  TH2D *MjjVsMaxEta = new TH2D("MjjVsMaxEta","MjjVsMaxEta",20,0,5,50,0,1000);
+  MjjVsMaxEta->GetXaxis()->SetTitle("max j #eta");
+  MjjVsMaxEta->GetYaxis()->SetTitle("M_{jj} [GeV]");
   
   TH1D *lumibinned_num_pure = new TH1D("lumibinned_num_pure","lumibinned_num_pure",20,0,2);
   lumibinned_num_pure->Sumw2();
@@ -590,20 +597,30 @@ int main(int argc, char* argv[]){
     double LargestMjj = -1;
     double LargestMjjJet1Pt = -1;
     double LargestMjjJet2Pt = -1;
-    if(MjjCut > 0){
+    double LargestDeltaEta = -1;
+    double MaxEta = -1;
+    //if(MjjCut > 0){
       for(unsigned i=0; i<n_l1jets_; ++i){
         for(unsigned j=i+1; j < n_l1jets_; ++j){
           if(l1jets_filtered[i]->vector().Pt() >= MjjPtMin1 && l1jets_filtered[j]->vector().Pt() >= MjjPtMin2){
             double Mjj = (l1jets_filtered[i]->vector()+l1jets_filtered[j]->vector()).M();
+            double DeltaEta = std::fabs(l1jets_filtered[i]->vector().Rapidity()-l1jets_filtered[j]->vector().Rapidity());
             if(Mjj > LargestMjj){
                 LargestMjj = Mjj;
                 LargestMjjJet1Pt = l1jets_filtered[i]->vector().Pt();
                 LargestMjjJet2Pt = l1jets_filtered[j]->vector().Pt();
+                double jeta_1 = std::fabs(l1jets_filtered[i]->vector().Rapidity());
+                double jeta_2 = std::fabs(l1jets_filtered[j]->vector().Rapidity());
+                MaxEta = std::max(jeta_1,jeta_2);
             }
+            if(DeltaEta > LargestDeltaEta) LargestDeltaEta = DeltaEta;
           }
         }
       }
       if(LargestMjj < MjjCut){ Filter = true;} 
+      
+      MjjVsDeltaEta->Fill(LargestDeltaEta,LargestMjj);
+      MjjVsMaxEta->Fill(MaxEta,LargestMjj);
       
       bool PassedDoubleIsoTau36er = false;
       bool PassedSingleEG = false;
@@ -679,7 +696,7 @@ int main(int argc, char* argv[]){
       if(PassedTripleJet_92_76_64){
         gains->Fill(10);
       } else if(!Filter) gains->Fill(11);
-    }
+    //}
 
     /*
     bool FailedOR = true;
